@@ -45,7 +45,7 @@ namespace Claunia.PropertyList
         {
             XmlDocument doc = new XmlDocument();
 
-            var settings = new XmlReaderSettings { ProhibitDtd = true };
+            var settings = new XmlReaderSettings { ProhibitDtd = false };
 
             using (Stream stream = f.OpenRead())
             using (XmlReader reader = XmlReader.Create(stream, settings))
@@ -77,7 +77,7 @@ namespace Claunia.PropertyList
             XmlDocument doc = new XmlDocument();
 
             XmlReaderSettings settings = new XmlReaderSettings();
-            settings.ProhibitDtd = true;
+            settings.ProhibitDtd = false;
 
             using (XmlReader reader = XmlReader.Create(str, settings))
             {
@@ -209,16 +209,18 @@ namespace Claunia.PropertyList
             {
                 XmlNodeList children = n.ChildNodes;
 
+                string text = "";
                 foreach (XmlNode child in children)
-                {
+                {                 
                     //Skip any non-text nodes, like comments or entities
                     if (child.NodeType == XmlNodeType.Text || child.NodeType == XmlNodeType.CDATA)
                     {
-                        string content = child.Value; //This concatenates any adjacent text/cdata/entity nodes
-                        return content ?? "";
+                        if(child.Value != null) {
+                            text += child.Value;
+                        }
                     }
                 }
-                return "";
+                return text;
             }
             return "";
         }
