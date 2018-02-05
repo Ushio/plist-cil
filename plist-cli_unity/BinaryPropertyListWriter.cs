@@ -27,9 +27,22 @@ using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Runtime.CompilerServices;
 
 namespace Claunia.PropertyList
 {
+    public class IdentityEqualityComparer<T> : IEqualityComparer<T>
+    {
+        public int GetHashCode(T obj)
+        {
+            return RuntimeHelpers.GetHashCode(obj);
+        }
+        public bool Equals(T x, T y)
+        {
+            return ReferenceEquals(x, y);
+        }
+    }
+
     /// <summary>
     /// <para>
     /// A BinaryPropertyListWriter is a helper class for writing out
@@ -181,6 +194,8 @@ namespace Claunia.PropertyList
 
         // map from object to its ID
         Collection<NSObject> idMap = new Collection<NSObject>(); //(new IdentityEqualityComparer<NSObject>());
+        Dictionary<NSObject, int> idMapIndexOf = new Dictionary<NSObject, int>(new IdentityEqualityComparer<NSObject>());
+
         int idSizeInBytes;
 
         /// <summary>
@@ -299,6 +314,8 @@ namespace Claunia.PropertyList
             {
                 idMap.Add(obj);
             }
+
+            idMapIndexOf[obj] = idMap.Count - 1;
         }
 
         internal bool IsSerializationPrimitive(NSString obj)
@@ -312,7 +329,8 @@ namespace Claunia.PropertyList
             {
                 var uid = obj as UID;
                 var first = idMap.OfType<UID>().First(v => NSObject.ArrayEquals(v.Bytes, uid.Bytes));
-                return idMap.IndexOf(first);
+                // return idMap.IndexOf(first);
+                return idMapIndexOf[first];
             }
             else if (!this.ReuseObjectIds && (obj is NSArray || (obj is NSString && !IsSerializationPrimitive((NSString)obj))))
             {
@@ -336,7 +354,8 @@ namespace Claunia.PropertyList
             }
             else
             {
-                return idMap.IndexOf(obj);
+                // return idMap.IndexOf(obj);
+                return idMapIndexOf[obj];
             }
         }
 
